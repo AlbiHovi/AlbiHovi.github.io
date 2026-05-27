@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STEM Formula Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --surface2: #1a1e28;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.14);
+      --text: #e8eaf0;
+      --muted: #7a7f94;
+      --accent: #5b8af5;
+      --accent-glow: rgba(91,138,245,0.15);
+      --physics: #5b8af5;
+      --physics-bg: rgba(91,138,245,0.12);
+      --math: #a78bfa;
+      --math-bg: rgba(167,139,250,0.12);
+      --chemistry: #34d399;
+      --chemistry-bg: rgba(52,211,153,0.12);
+      --biology: #fb923c;
+      --biology-bg: rgba(251,146,60,0.12);
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Space Grotesk', sans-serif;
+    }
+ 
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+ 
+    header {
+      text-align: center;
+      padding: 3.5rem 1.5rem 2rem;
+      background: linear-gradient(180deg, rgba(91,138,245,0.06) 0%, transparent 100%);
+      border-bottom: 0.5px solid var(--border);
+    }
+ 
+    header .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+ 
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+    }
+ 
+    header p {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+ 
+    .main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+ 
+    .search-wrap {
+      position: relative;
+      margin-bottom: 1.25rem;
+    }
+ 
+    .search-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+ 
+    #searchInput {
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border-hover);
+      border-radius: 12px;
+      padding: 13px 16px 13px 42px;
+      font-family: var(--sans);
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+ 
+    #searchInput::placeholder { color: var(--muted); }
+    #searchInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+ 
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+ 
+    .tab {
+      padding: 7px 18px;
+      border-radius: 999px;
+      border: 0.5px solid var(--border-hover);
+      font-size: 13px;
+      font-family: var(--sans);
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+ 
+    .tab:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+ 
+    .tab.active-all    { color: var(--accent);    border-color: var(--accent);    background: var(--accent-glow); }
+    .tab.active-physics   { color: var(--physics);   border-color: var(--physics);   background: var(--physics-bg); }
+    .tab.active-math      { color: var(--math);      border-color: var(--math);      background: var(--math-bg); }
+    .tab.active-chemistry { color: var(--chemistry); border-color: var(--chemistry); background: var(--chemistry-bg); }
+    .tab.active-biology   { color: var(--biology);   border-color: var(--biology);   background: var(--biology-bg); }
+ 
+    .results { display: flex; flex-direction: column; gap: 8px; }
+ 
+    .formula-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+ 
+    .formula-card:hover { border-color: var(--border-hover); background: var(--surface2); }
+ 
+    .formula-card.open-physics   { border-color: var(--physics);   background: var(--surface2); }
+    .formula-card.open-math      { border-color: var(--math);      background: var(--surface2); }
+    .formula-card.open-chemistry { border-color: var(--chemistry); background: var(--surface2); }
+    .formula-card.open-biology   { border-color: var(--biology);   background: var(--surface2); }
+ 
+    .card-header { display: flex; align-items: center; gap: 10px; }
+ 
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+ 
+    .badge-physics   { color: var(--physics);   background: var(--physics-bg); }
+    .badge-math      { color: var(--math);      background: var(--math-bg); }
+    .badge-chemistry { color: var(--chemistry); background: var(--chemistry-bg); }
+    .badge-biology   { color: var(--biology);   background: var(--biology-bg); }
+ 
+    .card-name { font-size: 15px; font-weight: 500; color: var(--text); flex: 1; }
+ 
+    .chevron {
+      color: var(--muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+ 
+    .formula-card.open-physics .chevron,
+    .formula-card.open-math .chevron,
+    .formula-card.open-chemistry .chevron,
+    .formula-card.open-biology .chevron { transform: rotate(180deg); }
+ 
+    .card-formula {
+      font-family: var(--mono);
+      font-size: 16px;
+      margin-top: 10px;
+      letter-spacing: 0.02em;
+    }
+ 
+    .card-formula-physics   { color: var(--physics); }
+    .card-formula-math      { color: var(--math); }
+    .card-formula-chemistry { color: var(--chemistry); }
+    .card-formula-biology   { color: var(--biology); }
+ 
+    .card-body {
+      display: none;
+      border-top: 0.5px solid var(--border);
+      margin-top: 14px;
+      padding-top: 14px;
+    }
+ 
+    .card-body.visible { display: block; }
+ 
+    .desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+ 
+    .vars-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+ 
+    .var-row {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      padding: 4px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+ 
+    .var-row:last-child { border-bottom: none; }
+ 
+    .var-sym {
+      font-family: var(--mono);
+      min-width: 70px;
+      font-size: 12px;
+    }
+ 
+    .var-sym-physics   { color: var(--physics); }
+    .var-sym-math      { color: var(--math); }
+    .var-sym-chemistry { color: var(--chemistry); }
+    .var-sym-biology   { color: var(--biology); }
+ 
+    .var-desc { color: var(--muted); line-height: 1.5; }
+ 
+    .no-results {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+ 
+    .no-results .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .no-results p { font-size: 15px; }
+ 
+    .count {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+ 
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 0.5px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+ 
+<header>
+  <p class="label">Reference Library</p>
+  <h1>STEM Formula Explorer</h1>
+  <p>Search and explore formulas across Physics, Math, Chemistry, and Biology — with full explanations.</p>
+</header>
+ 
+<div class="main">
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="Search formulas, e.g. 'force', 'pH', 'circle', 'DNA'..." />
+  </div>
+ 
+  <div class="tabs" id="tabs">
+    <button class="tab active-all" data-subject="all">All subjects</button>
+    <button class="tab" data-subject="physics">⚛ Physics</button>
+    <button class="tab" data-subject="math">∑ Math</button>
+    <button class="tab" data-subject="chemistry">⚗ Chemistry</button>
+    <button class="tab" data-subject="biology">🧬 Biology</button>
+  </div>
+ 
+  <div class="count" id="count"></div>
+  <div class="results" id="results"></div>
+</div>
+ 
+<footer>STEM Formula Explorer &mdash; Built for Computer Communication &amp; Networks Project</footer>
+ 
+<script>
+const formulas = [
+  { subject: "physics", name: "Newton's second law", formula: "F = m × a", desc: "Describes how the force applied to an object relates to its mass and the acceleration it produces. The greater the force or the smaller the mass, the higher the acceleration.", vars: [["F", "Force (Newtons, N)"], ["m", "Mass (kilograms, kg)"], ["a", "Acceleration (m/s²)"]] },
+  { subject: "physics", name: "Kinetic energy", formula: "KE = ½mv²", desc: "The energy an object possesses due to its motion. A heavier object or one moving faster has more kinetic energy.", vars: [["KE", "Kinetic energy (Joules, J)"], ["m", "Mass (kg)"], ["v", "Velocity (m/s)"]] },
+  { subject: "physics", name: "Gravitational potential energy", formula: "PE = mgh", desc: "Energy stored in an object due to its height above a reference point. The higher the object and the greater its mass, the more potential energy it holds.", vars: [["PE", "Potential energy (J)"], ["m", "Mass (kg)"], ["g", "Gravitational acceleration (9.8 m/s²)"], ["h", "Height (m)"]] },
+  { subject: "physics", name: "Ohm's law", formula: "V = I × R", desc: "Relates voltage, current, and resistance in an electrical circuit. If resistance increases while voltage stays the same, current decreases.", vars: [["V", "Voltage (Volts, V)"], ["I", "Current (Amperes, A)"], ["R", "Resistance (Ohms, Ω)"]] },
+  { subject: "physics", name: "Speed of a wave", formula: "v = f × λ", desc: "Connects the speed of a wave to its frequency and wavelength. Waves with higher frequency have shorter wavelengths if the speed stays constant.", vars: [["v", "Wave speed (m/s)"], ["f", "Frequency (Hertz, Hz)"], ["λ", "Wavelength (meters, m)"]] },
+  { subject: "physics", name: "Einstein's mass-energy equivalence", formula: "E = mc²", desc: "Shows that mass and energy are interchangeable. A tiny amount of mass can be converted into an enormous amount of energy, which is the principle behind nuclear reactions.", vars: [["E", "Energy (J)"], ["m", "Mass (kg)"], ["c", "Speed of light (3×10⁸ m/s)"]] },
+  { subject: "physics", name: "Acceleration", formula: "a = (v - u) / t", desc: "Defines acceleration as the change in velocity over time. A negative result means the object is decelerating.", vars: [["a", "Acceleration (m/s²)"], ["v", "Final velocity (m/s)"], ["u", "Initial velocity (m/s)"], ["t", "Time (seconds, s)"]] },
+  { subject: "physics", name: "Universal gravitation", formula: "F = G(m₁m₂) / r²", desc: "Every mass attracts every other mass with a force that depends on their masses and distance. This law explains why planets orbit the sun and why objects fall to Earth.", vars: [["F", "Gravitational force (N)"], ["G", "Gravitational constant (6.674×10⁻¹¹ N·m²/kg²)"], ["m₁, m₂", "The two masses (kg)"], ["r", "Distance between centers (m)"]] },
+  { subject: "math", name: "Quadratic formula", formula: "x = (-b ± √(b²−4ac)) / 2a", desc: "Solves any quadratic equation of the form ax² + bx + c = 0. The ± means there are usually two solutions. If b²−4ac is negative, there are no real solutions.", vars: [["a, b, c", "Coefficients of the quadratic equation"], ["x", "The unknown variable to solve for"]] },
+  { subject: "math", name: "Pythagorean theorem", formula: "a² + b² = c²", desc: "In a right-angled triangle, the square of the hypotenuse equals the sum of the squares of the other two sides. Used to find any missing side when the other two are known.", vars: [["a, b", "The two shorter sides (legs)"], ["c", "Hypotenuse (longest side, opposite the right angle)"]] },
+  { subject: "math", name: "Area of a circle", formula: "A = π × r²", desc: "Calculates the surface area enclosed by a circle. Pi (π ≈ 3.14159) is the constant ratio of a circle's circumference to its diameter.", vars: [["A", "Area (square units)"], ["π", "Pi ≈ 3.14159"], ["r", "Radius of the circle"]] },
+  { subject: "math", name: "Slope of a line", formula: "m = (y₂ − y₁) / (x₂ − x₁)", desc: "Measures the steepness and direction of a line. A positive slope rises left to right; a negative slope falls. A slope of 0 means the line is horizontal.", vars: [["m", "Slope"], ["(x₁, y₁)", "First point on the line"], ["(x₂, y₂)", "Second point on the line"]] },
+  { subject: "math", name: "Compound interest", formula: "A = P(1 + r/n)^(nt)", desc: "Calculates how an investment grows when interest is earned on both the principal and previously accumulated interest. Used widely in banking and finance.", vars: [["A", "Final amount"], ["P", "Principal (starting amount)"], ["r", "Annual interest rate (decimal)"], ["n", "Compounding periods per year"], ["t", "Time in years"]] },
+  { subject: "math", name: "Circumference of a circle", formula: "C = 2πr", desc: "The total distance around a circle. Doubling the radius doubles the circumference.", vars: [["C", "Circumference"], ["π", "Pi ≈ 3.14159"], ["r", "Radius"]] },
+  { subject: "math", name: "Logarithm definition", formula: "logₐ(b) = c  ↔  aᶜ = b", desc: "A logarithm answers the question: to what power must we raise the base to get a given number? Logarithms are used in everything from earthquake scales to signal processing.", vars: [["a", "Base of the logarithm"], ["b", "The number (argument)"], ["c", "The exponent (result)"]] },
+  { subject: "chemistry", name: "Ideal gas law", formula: "PV = nRT", desc: "Describes the behavior of an ideal gas relating pressure, volume, temperature, and amount. If you compress a gas (reduce V), its pressure P increases when temperature is held constant.", vars: [["P", "Pressure (Pascals, Pa)"], ["V", "Volume (liters or m³)"], ["n", "Amount of gas (moles)"], ["R", "Gas constant (8.314 J/mol·K)"], ["T", "Temperature (Kelvin, K)"]] },
+  { subject: "chemistry", name: "pH formula", formula: "pH = −log[H⁺]", desc: "Measures the acidity or basicity of a solution. pH below 7 is acidic, above 7 is basic, exactly 7 is neutral. Each unit change represents a 10× change in hydrogen ion concentration.", vars: [["pH", "Acidity scale (0–14)"], ["[H⁺]", "Concentration of hydrogen ions (mol/L)"]] },
+  { subject: "chemistry", name: "Molarity", formula: "M = n / V", desc: "Expresses the concentration of a solution as moles of solute per liter. Higher molarity means a more concentrated solution.", vars: [["M", "Molarity (mol/L)"], ["n", "Moles of solute"], ["V", "Volume of solution (liters)"]] },
+  { subject: "chemistry", name: "Molar mass conversion", formula: "n = m / M", desc: "Converts the mass of a substance into moles, which is the unit chemists use to count particles. One mole contains approximately 6.022×10²³ particles (Avogadro's number).", vars: [["n", "Number of moles"], ["m", "Mass (grams, g)"], ["M", "Molar mass (g/mol)"]] },
+  { subject: "chemistry", name: "Arrhenius equation", formula: "k = Ae^(−Ea/RT)", desc: "Predicts how reaction rate changes with temperature. As temperature increases, the rate constant k increases exponentially, meaning reactions speed up significantly with heat.", vars: [["k", "Rate constant"], ["A", "Frequency factor"], ["Ea", "Activation energy (J/mol)"], ["R", "Gas constant (8.314 J/mol·K)"], ["T", "Temperature (K)"]] },
+  { subject: "chemistry", name: "Dilution formula", formula: "C₁V₁ = C₂V₂", desc: "When you dilute a solution by adding water, the number of moles of solute stays the same. This formula lets you calculate the new concentration or volume after dilution.", vars: [["C₁", "Initial concentration (mol/L)"], ["V₁", "Initial volume (L)"], ["C₂", "Final concentration (mol/L)"], ["V₂", "Final volume (L)"]] },
+  { subject: "biology", name: "Hardy-Weinberg equilibrium", formula: "p² + 2pq + q² = 1", desc: "Predicts genotype frequencies in a non-evolving population. It serves as a baseline to detect if evolution is occurring — deviations indicate natural selection, mutation, or other forces.", vars: [["p", "Frequency of dominant allele"], ["q", "Frequency of recessive allele"], ["p²", "Homozygous dominant frequency"], ["2pq", "Heterozygous frequency"], ["q²", "Homozygous recessive frequency"]] },
+  { subject: "biology", name: "Photosynthesis", formula: "6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂", desc: "Plants absorb carbon dioxide and water, and using sunlight, convert them into glucose for energy and oxygen as a byproduct. This is the foundation of most life on Earth.", vars: [["CO₂", "Carbon dioxide (absorbed from air)"], ["H₂O", "Water (absorbed from soil)"], ["C₆H₁₂O₆", "Glucose (sugar produced)"], ["O₂", "Oxygen (released)"]] },
+  { subject: "biology", name: "Cellular respiration", formula: "C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP", desc: "Cells break down glucose using oxygen to release energy as ATP, which powers all cellular processes. This is essentially the reverse of photosynthesis.", vars: [["C₆H₁₂O₆", "Glucose (the fuel)"], ["O₂", "Oxygen consumed"], ["CO₂", "Carbon dioxide (waste)"], ["H₂O", "Water (waste)"], ["ATP", "Energy currency of the cell"]] },
+  { subject: "biology", name: "Population growth rate", formula: "r = (B − D) / N", desc: "Calculates the per-capita rate at which a population grows or shrinks. A positive r means growth; a negative r means decline.", vars: [["r", "Per-capita growth rate"], ["B", "Number of births"], ["D", "Number of deaths"], ["N", "Current population size"]] },
+  { subject: "biology", name: "Net primary productivity", formula: "NPP = GPP − R", desc: "Measures the actual energy available to consumers in an ecosystem. GPP is the total energy captured by plants; R is the energy they use for their own respiration.", vars: [["NPP", "Net primary productivity"], ["GPP", "Gross primary productivity"], ["R", "Energy used by plant respiration"]] },
+];
+ 
+const subjectLabel = { physics: "Physics", math: "Math", chemistry: "Chemistry", biology: "Biology" };
+let activeSubject = "all";
+let searchQuery = "";
+ 
+function render() {
+  const q = searchQuery.toLowerCase().trim();
+  const filtered = formulas.filter(f => {
+    const matchSubject = activeSubject === "all" || f.subject === activeSubject;
+    const matchSearch = !q || f.name.toLowerCase().includes(q) || f.formula.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q) || f.vars.some(v => v[0].toLowerCase().includes(q) || v[1].toLowerCase().includes(q));
+    return matchSubject && matchSearch;
+  });
+ 
+  const countEl = document.getElementById("count");
+  countEl.textContent = filtered.length === formulas.length ? `Showing all ${formulas.length} formulas` : `${filtered.length} formula${filtered.length !== 1 ? "s" : ""} found`;
+ 
+  const container = document.getElementById("results");
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="no-results"><div class="icon">🔍</div><p>No formulas found for "<strong>${q}</strong>".<br>Try a different keyword.</p></div>`;
+    return;
+  }
+ 
+  container.innerHTML = filtered.map((f, i) => `
+    <div class="formula-card" id="card-${i}" onclick="toggle(${i}, '${f.subject}')">
+      <div class="card-header">
+        <span class="badge badge-${f.subject}">${subjectLabel[f.subject]}</span>
+        <span class="card-name">${f.name}</span>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="card-formula card-formula-${f.subject}">${f.formula}</div>
+      <div class="card-body" id="body-${i}">
+        <p class="desc">${f.desc}</p>
+        <p class="vars-label">Variables</p>
+        ${f.vars.map(v => `<div class="var-row"><span class="var-sym var-sym-${f.subject}">${v[0]}</span><span class="var-desc">${v[1]}</span></div>`).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+ 
+function toggle(i, subject) {
+  const card = document.getElementById("card-" + i);
+  const body = document.getElementById("body-" + i);
+  const isOpen = card.classList.contains("open-" + subject);
+  document.querySelectorAll(".formula-card").forEach(c => c.className = c.className.replace(/open-\w+/g, "").trim());
+  document.querySelectorAll(".card-body").forEach(b => b.classList.remove("visible"));
+  if (!isOpen) { card.classList.add("open-" + subject); body.classList.add("visible"); }
+}
+ 
+document.getElementById("searchInput").addEventListener("input", e => {
+  searchQuery = e.target.value;
+  render();
+});
+ 
+document.getElementById("tabs").addEventListener("click", e => {
+  const tab = e.target.closest(".tab");
+  if (!tab) return;
+  activeSubject = tab.dataset.subject;
+  document.querySelectorAll(".tab").forEach(t => {
+    t.className = "tab";
+  });
+  tab.classList.add("active-" + activeSubject);
+  render();
+});
+ 
+render();
+</script>
+</body>
+</html>
